@@ -8,6 +8,9 @@ import cv2
 import numpy as np
 
 
+SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+
 @dataclass
 class ImageData:
     name: str
@@ -48,7 +51,7 @@ def preprocess_image(image: np.ndarray, preprocess_cfg: dict) -> np.ndarray:
 
 def load_images(input_dir: str | Path, config: dict) -> List[ImageData]:
     image_dir = Path(input_dir)
-    image_paths = sorted([path for path in image_dir.iterdir() if path.suffix.lower() in {".jpg", ".jpeg", ".png"}])
+    image_paths = sorted([path for path in image_dir.iterdir() if path.suffix.lower() in SUPPORTED_EXTENSIONS])
     if len(image_paths) < 2:
         raise ValueError("Need at least two input images to build a panorama.")
 
