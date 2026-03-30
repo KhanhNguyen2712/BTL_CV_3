@@ -1,0 +1,46 @@
+resize:
+  max_long_edge: 1600
+
+preprocess:
+  gaussian_blur: true
+  gaussian_kernel: 5
+  equalize_hist: false
+
+feature:
+  name: orb
+  orb:
+    nfeatures: 3000
+    scaleFactor: 1.2
+    nlevels: 8
+    edgeThreshold: 31
+    firstLevel: 0
+    WTA_K: 2
+    scoreType: HARRIS_SCORE
+    patchSize: 31
+    fastThreshold: 20
+
+matching:
+  matcher: bf
+  norm: hamming
+  knn_k: 2
+  ratio: 0.75
+  min_good_matches: 20
+
+homography:
+  method: ransac
+  ransac_thresh: 5.0
+  min_inliers: 15
+  min_inlier_ratio: 0.3
+
+blend:
+  mode: feather
+  feather_blur_kernel: 61
+
+debug:
+  save_keypoints: true
+  save_matches: true
+  save_warp_steps: true
+  save_intermediate_panorama: true
+
+runtime:
+  stop_on_failure: true
