@@ -48,25 +48,22 @@ def _affine_to_homography(matrix: np.ndarray) -> np.ndarray:
 def _validate_homography(
     base_shape: tuple[int, ...],
     incoming_shape: tuple[int, ...],
-    homography: np.ndarray,
+    incoming_to_base: np.ndarray,
     config: dict,
     pairwise: bool = False,
+    model: str = "homography",
 ) -> Tuple[bool, str, Dict]:
-    if not np.isfinite(homography).all():
+    if not np.isfinite(incoming_to_base).all():
         return False, "Homography contains NaN or Inf values.", {}
 
-    normalized = _normalize_homography(homography)
-    try:
-        incoming_to_base = np.linalg.inv(normalized)
-    except np.linalg.LinAlgError:
-        return False, "Homography matrix is singular and cannot be inverted.", {}
+    normalized = _normalize_homography(incoming_to_base)
 
-    bounds = _canvas_bounds(base_shape, incoming_shape, incoming_to_base)
+    bounds = _canvas_bounds(base_shape, incoming_shape, normalized)
     base_h, base_w = base_shape[:2]
     incoming_h, incoming_w = incoming_shape[:2]
     base_center = np.array([base_w / 2.0, base_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
     incoming_center = np.array([incoming_w / 2.0, incoming_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
-    projected_center = cv2.perspectiveTransform(incoming_center, incoming_to_base).reshape(2)
+    projected_center = cv2.perspectiveTransform(incoming_center, normalized).reshape(2)
     base_center = base_center.reshape(2)
     delta_x = float(projected_center[0] - base_center[0])
     delta_y = float(projected_center[1] - base_center[1])
@@ -110,6 +107,12 @@ def _validate_homography(
         if abs(delta_y) > abs(delta_x) and abs(delta_x) > 1.0:
             return False, "Projected motion is dominated by vertical shift, inconsistent with horizontal panorama.", bounds
 
+        capture_direction = str(homography_cfg.get("capture_direction", "")).lower()
+        if capture_direction == "right_to_left" and delta_x <= 0:
+            return False, "Projected horizontal shift is not positive for a right-to-left capture sequence.", bounds
+        if capture_direction == "left_to_right" and delta_x >= 0:
+            return False, "Projected horizontal shift is not negative for a left-to-right capture sequence.", bounds
+
     return True, "ok", bounds
 
 
@@ -149,6 +152,8 @@ def estimate_homography(
     homography_cfg = config["homography"]
     min_inliers = int(homography_cfg["min_inliers"])
     min_inlier_ratio = float(homography_cfg["min_inlier_ratio"])
+    affine_min_inliers = int(homography_cfg.get("affine_min_inliers", min_inliers))
+    affine_min_inlier_ratio = float(homography_cfg.get("affine_min_inlier_ratio", min_inlier_ratio))
 
     homography_matrix, homography_mask = cv2.findHomography(
         src_pts, dst_pts, cv2.RANSAC, float(homography_cfg["ransac_thresh"])
@@ -165,6 +170,7 @@ def estimate_homography(
             homography_matrix,
             config,
             pairwise=pairwise,
+            model="homography",
         )
         homography_success = (
             homography_inliers >= min_inliers
@@ -207,10 +213,11 @@ def estimate_homography(
                 affine_h,
                 config,
                 pairwise=pairwise,
+                model="affine_partial",
             )
             affine_success = (
-                affine_inliers >= min_inliers
-                and affine_inlier_ratio >= min_inlier_ratio
+                affine_inliers >= affine_min_inliers
+                and affine_inlier_ratio >= affine_min_inlier_ratio
                 and valid_affine
             )
             if affine_success:
