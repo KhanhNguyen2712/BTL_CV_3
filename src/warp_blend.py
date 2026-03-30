@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Tuple
-
 import cv2
 import numpy as np
 
@@ -30,6 +28,33 @@ def _compute_canvas(base_image: np.ndarray, incoming_image: np.ndarray, homograp
         dtype=np.float64,
     )
 
+    width = int(x_max - x_min)
+    height = int(y_max - y_min)
+    return translation, width, height
+
+
+def _compute_global_canvas(images, transforms):
+    all_corners = []
+    for image, transform in zip(images, transforms):
+        height, width = image.color.shape[:2]
+        corners = np.float32([[0, 0], [width, 0], [width, height], [0, height]]).reshape(-1, 1, 2)
+        warped = cv2.perspectiveTransform(corners, transform)
+        all_corners.append(warped)
+
+    merged = np.concatenate(all_corners, axis=0)
+    x_min, y_min = np.floor(merged.min(axis=0).ravel()).astype(int)
+    x_max, y_max = np.ceil(merged.max(axis=0).ravel()).astype(int)
+
+    translate_x = -x_min if x_min < 0 else 0
+    translate_y = -y_min if y_min < 0 else 0
+    translation = np.array(
+        [
+            [1.0, 0.0, float(translate_x)],
+            [0.0, 1.0, float(translate_y)],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float64,
+    )
     width = int(x_max - x_min)
     height = int(y_max - y_min)
     return translation, width, height
@@ -114,3 +139,53 @@ def stitch_pair(base_image: np.ndarray, incoming_image: np.ndarray, homography: 
         "translation": {"x": float(translation[0, 2]), "y": float(translation[1, 2])},
     }
     return cropped, debug
+
+
+def compose_panorama(images, transforms, config: dict):
+    translation, width, height = _compute_global_canvas(images, transforms)
+    homography_cfg = config["homography"]
+    max_width = int(homography_cfg.get("max_canvas_width", 12000))
+    max_height = int(homography_cfg.get("max_canvas_height", 6000))
+    max_pixels = int(homography_cfg.get("max_canvas_pixels", 30000000))
+
+    if width <= 0 or height <= 0:
+        raise ValueError(f"Invalid global canvas size: width={width}, height={height}")
+    if width > max_width or height > max_height or width * height > max_pixels:
+        raise ValueError(
+            "Global panorama canvas exceeds configured safety limits: "
+            f"width={width}, height={height}, pixels={width * height}"
+        )
+
+    accum_image = np.zeros((height, width, 3), dtype=np.float32)
+    accum_weight = np.zeros((height, width, 1), dtype=np.float32)
+    blend_cfg = config["blend"]
+    blur_kernel = int(blend_cfg.get("feather_blur_kernel", 61))
+
+    image_debug = []
+    for image, transform in zip(images, transforms):
+        total_transform = translation @ transform
+        warped_image = cv2.warpPerspective(image.color, total_transform, (width, height))
+        warped_mask = cv2.warpPerspective(
+            np.full(image.color.shape[:2], 255, dtype=np.uint8),
+            total_transform,
+            (width, height),
+        )
+        weight = _soft_mask(warped_mask / 255.0, blur_kernel)
+        accum_image += warped_image.astype(np.float32) * weight
+        accum_weight += weight
+        image_debug.append(
+            {
+                "name": image.name,
+                "shape": list(image.color.shape),
+            }
+        )
+
+    accum_weight[accum_weight == 0] = 1.0
+    panorama = np.clip(accum_image / accum_weight, 0, 255).astype(np.uint8)
+    panorama = crop_valid_region(panorama)
+    debug = {
+        "canvas_size": {"width": width, "height": height},
+        "translation": {"x": float(translation[0, 2]), "y": float(translation[1, 2])},
+        "images": image_debug,
+    }
+    return panorama, debug
