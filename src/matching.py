@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Dict, List, Tuple
 
 import cv2
-import numpy as np
 
 
 def build_matcher(config: dict):
@@ -62,8 +61,8 @@ def match_descriptors(matcher, desc1, desc2, kp1, image1_shape, config: dict) ->
         }
 
     matching_cfg = config["matching"]
-    knn_k = int(config["matching"].get("knn_k", 2))
-    ratio = float(config["matching"].get("ratio", 0.75))
+    knn_k = int(matching_cfg.get("knn_k", 2))
+    ratio = float(matching_cfg.get("ratio", 0.75))
     raw_matches = matcher.knnMatch(desc1, desc2, k=knn_k)
     forward_good_matches = _ratio_filter(raw_matches, ratio)
 

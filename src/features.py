@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import List, Tuple
 
 import cv2
-import numpy as np
 
 from .utils import orb_score_type
 

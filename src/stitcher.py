@@ -218,19 +218,22 @@ class PairwiseEstimationError(RuntimeError):
         self.step_summaries = step_summaries
 
 
-def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) -> Dict:
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    reference_idx = len(images) // 2
-
-    summary = {
-        "feature": config["feature"]["name"],
+def _build_summary(images: List[ImageData], reference_idx: int, feature_name: str) -> Dict:
+    return {
+        "feature": feature_name,
         "reference_index": reference_idx,
         "reference_name": images[reference_idx].name,
         "images": [img.name for img in images],
         "steps": [],
         "status": "running",
     }
+
+
+def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) -> Dict:
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    reference_idx = len(images) // 2
+    summary = _build_summary(images, reference_idx, config["feature"]["name"])
 
     try:
         pairwise_homographies, step_summaries = _estimate_pairwise_homographies(images, config, output_path)

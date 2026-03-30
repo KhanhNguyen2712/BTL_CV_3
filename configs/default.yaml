@@ -57,8 +57,3 @@ blend:
 debug:
   save_keypoints: true
   save_matches: true
-  save_warp_steps: true
-  save_intermediate_panorama: true
-
-runtime:
-  stop_on_failure: true
