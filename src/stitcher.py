@@ -239,7 +239,7 @@ def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) 
         summary["global_transforms"] = {
             image.name: transforms[idx].round(6).tolist() for idx, image in enumerate(images)
         }
-        panorama, composition_debug = compose_panorama(images, transforms, config)
+        panorama_full, panorama_cropped, composition_debug = compose_panorama(images, transforms, config)
     except PairwiseEstimationError as exc:
         summary["steps"].extend(exc.step_summaries)
         summary["status"] = "failed"
@@ -258,12 +258,10 @@ def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) 
         summary["global_transforms"] = summary.get("global_transforms", {})
         return summary
 
-    write_image(output_path / "panorama_final.jpg", panorama)
-
-    if config["debug"].get("save_intermediate_panorama", True):
-        write_image(output_path / "panorama_composed.jpg", panorama)
+    write_image(output_path / "panorama_final.jpg", panorama_cropped)
 
     summary["composition"] = composition_debug
-    summary["final_panorama_shape"] = list(panorama.shape)
+    summary["panorama_full_shape"] = list(panorama_full.shape)
+    summary["final_panorama_shape"] = list(panorama_cropped.shape)
     summary["status"] = "ok"
     return summary
