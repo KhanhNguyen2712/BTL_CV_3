@@ -131,7 +131,14 @@ def _estimate_pairwise_homographies(images: List[ImageData], config: dict, outpu
 
         left_kp, left_desc = extract_features(extractor, left_image.gray)
         right_kp, right_desc = extract_features(extractor, right_image.gray)
-        raw_matches, good_matches = match_descriptors(matcher, left_desc, right_desc, config)
+        raw_matches, good_matches, match_metadata = match_descriptors(
+            matcher,
+            left_desc,
+            right_desc,
+            left_kp,
+            left_image.color.shape,
+            config,
+        )
         homography, mask, homography_stats = estimate_homography(
             left_kp,
             right_kp,
@@ -163,13 +170,17 @@ def _estimate_pairwise_homographies(images: List[ImageData], config: dict, outpu
             "right_keypoints": len(right_kp),
             "raw_match_groups": len(raw_matches),
             "good_matches": len(good_matches),
+            "matching": match_metadata,
             "homography": homography_stats,
         }
 
         if homography is None or not homography_stats["success"]:
             step_summary["status"] = "failed"
             step_summaries.append(step_summary)
-            raise RuntimeError(f"Failed at {step_name}: {homography_stats['reason']}")
+            raise PairwiseEstimationError(
+                f"Failed at {step_name}: {homography_stats['reason']}",
+                step_summaries,
+            )
 
         step_summary["status"] = "ok"
         pairwise_homographies.append(homography)
@@ -201,6 +212,12 @@ def _accumulate_transforms(images: List[ImageData], pairwise_homographies: List[
     return transforms
 
 
+class PairwiseEstimationError(RuntimeError):
+    def __init__(self, message: str, step_summaries: List[Dict]):
+        super().__init__(message)
+        self.step_summaries = step_summaries
+
+
 def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) -> Dict:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -223,6 +240,12 @@ def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) 
             image.name: transforms[idx].round(6).tolist() for idx, image in enumerate(images)
         }
         panorama, composition_debug = compose_panorama(images, transforms, config)
+    except PairwiseEstimationError as exc:
+        summary["steps"].extend(exc.step_summaries)
+        summary["status"] = "failed"
+        summary["failure_reason"] = str(exc)
+        summary["failed_stage"] = "pairwise_matching"
+        return summary
     except RuntimeError as exc:
         summary["status"] = "failed"
         summary["failure_reason"] = str(exc)

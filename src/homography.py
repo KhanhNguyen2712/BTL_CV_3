@@ -39,6 +39,12 @@ def _normalize_homography(matrix: np.ndarray) -> np.ndarray:
     return normalized
 
 
+def _affine_to_homography(matrix: np.ndarray) -> np.ndarray:
+    homography = np.eye(3, dtype=np.float64)
+    homography[:2, :] = matrix.astype(np.float64)
+    return homography
+
+
 def _validate_homography(
     base_shape: tuple[int, ...],
     incoming_shape: tuple[int, ...],
@@ -56,6 +62,16 @@ def _validate_homography(
         return False, "Homography matrix is singular and cannot be inverted.", {}
 
     bounds = _canvas_bounds(base_shape, incoming_shape, incoming_to_base)
+    base_h, base_w = base_shape[:2]
+    incoming_h, incoming_w = incoming_shape[:2]
+    base_center = np.array([base_w / 2.0, base_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
+    incoming_center = np.array([incoming_w / 2.0, incoming_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
+    projected_center = cv2.perspectiveTransform(incoming_center, incoming_to_base).reshape(2)
+    base_center = base_center.reshape(2)
+    delta_x = float(projected_center[0] - base_center[0])
+    delta_y = float(projected_center[1] - base_center[1])
+    bounds["center_shift"] = {"dx": delta_x, "dy": delta_y}
+
     homography_cfg = config["homography"]
     if pairwise:
         max_width = int(homography_cfg.get("pairwise_max_canvas_width", 4000))
@@ -79,19 +95,17 @@ def _validate_homography(
         return False, f"Projected canvas area {bounds['pixels']} exceeds limit {max_pixels}.", bounds
 
     if pairwise:
-        base_h, base_w = base_shape[:2]
-        incoming_h, incoming_w = incoming_shape[:2]
-        base_center = np.array([base_w / 2.0, base_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
-        incoming_center = np.array([incoming_w / 2.0, incoming_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
-        projected_center = cv2.perspectiveTransform(incoming_center, incoming_to_base).reshape(2)
-        base_center = base_center.reshape(2)
-        delta_x = float(projected_center[0] - base_center[0])
-        delta_y = float(projected_center[1] - base_center[1])
-        bounds["center_shift"] = {"dx": delta_x, "dy": delta_y}
-
         max_vertical_shift = float(homography_cfg.get("pairwise_max_vertical_shift", 500))
         if abs(delta_y) > max_vertical_shift:
             return False, f"Projected vertical shift {delta_y:.2f} exceeds limit {max_vertical_shift}.", bounds
+
+        max_center_shift_ratio_x = float(homography_cfg.get("pairwise_max_center_shift_ratio_x", 0.45))
+        max_center_shift_ratio_y = float(homography_cfg.get("pairwise_max_center_shift_ratio_y", 0.2))
+        if abs(delta_x) > base_w * max_center_shift_ratio_x:
+            return False, f"Projected horizontal center shift {delta_x:.2f} exceeds ratio limit {max_center_shift_ratio_x}.", bounds
+
+        if abs(delta_y) > base_h * max_center_shift_ratio_y:
+            return False, f"Projected vertical center shift {delta_y:.2f} exceeds ratio limit {max_center_shift_ratio_y}.", bounds
 
         if abs(delta_y) > abs(delta_x) and abs(delta_x) > 1.0:
             return False, "Projected motion is dominated by vertical shift, inconsistent with horizontal panorama.", bounds
@@ -133,46 +147,106 @@ def estimate_homography(
     dst_pts = np.float32([kp_dst[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
 
     homography_cfg = config["homography"]
-    matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, float(homography_cfg["ransac_thresh"]))
-    if matrix is None or mask is None:
-        return None, None, {
+    min_inliers = int(homography_cfg["min_inliers"])
+    min_inlier_ratio = float(homography_cfg["min_inlier_ratio"])
+
+    homography_matrix, homography_mask = cv2.findHomography(
+        src_pts, dst_pts, cv2.RANSAC, float(homography_cfg["ransac_thresh"])
+    )
+
+    homography_stats = None
+    if homography_matrix is not None and homography_mask is not None:
+        homography_matrix = _normalize_homography(homography_matrix)
+        homography_inliers = int(homography_mask.ravel().sum())
+        homography_inlier_ratio = homography_inliers / max(len(matches), 1)
+        valid_homography, homography_reason, homography_canvas_bounds = _validate_homography(
+            base_shape,
+            incoming_shape,
+            homography_matrix,
+            config,
+            pairwise=pairwise,
+        )
+        homography_success = (
+            homography_inliers >= min_inliers
+            and homography_inlier_ratio >= min_inlier_ratio
+            and valid_homography
+        )
+        if homography_success:
+            homography_reason = "ok"
+        elif valid_homography:
+            homography_reason = "Homography rejected by inlier thresholds."
+
+        homography_stats = {
             "good_matches": len(matches),
-            "inliers": 0,
-            "inlier_ratio": 0.0,
-            "success": False,
-            "reason": "RANSAC could not estimate a valid homography.",
-            "canvas_bounds": {},
+            "inliers": homography_inliers,
+            "inlier_ratio": homography_inlier_ratio,
+            "success": homography_success,
+            "reason": homography_reason,
+            "canvas_bounds": homography_canvas_bounds,
+            "matrix": homography_matrix.round(6).tolist(),
+            "model": "homography",
         }
+        if homography_success:
+            return homography_matrix, homography_mask, homography_stats
 
-    matrix = _normalize_homography(matrix)
-    inliers = int(mask.ravel().sum())
-    inlier_ratio = inliers / max(len(matches), 1)
-    valid_homography, reason, canvas_bounds = _validate_homography(
-        base_shape,
-        incoming_shape,
-        matrix,
-        config,
-        pairwise=pairwise,
-    )
+    if pairwise and homography_cfg.get("fallback_affine_partial", True):
+        affine_matrix, affine_mask = cv2.estimateAffinePartial2D(
+            src_pts,
+            dst_pts,
+            method=cv2.RANSAC,
+            ransacReprojThreshold=float(homography_cfg["ransac_thresh"]),
+        )
+        if affine_matrix is not None and affine_mask is not None:
+            affine_h = _affine_to_homography(affine_matrix)
+            affine_h = _normalize_homography(affine_h)
+            affine_inliers = int(affine_mask.ravel().sum())
+            affine_inlier_ratio = affine_inliers / max(len(matches), 1)
+            valid_affine, affine_reason, affine_canvas_bounds = _validate_homography(
+                base_shape,
+                incoming_shape,
+                affine_h,
+                config,
+                pairwise=pairwise,
+            )
+            affine_success = (
+                affine_inliers >= min_inliers
+                and affine_inlier_ratio >= min_inlier_ratio
+                and valid_affine
+            )
+            if affine_success:
+                affine_reason = "ok"
+            elif valid_affine:
+                affine_reason = "Affine partial rejected by inlier thresholds."
 
-    success = (
-        inliers >= int(homography_cfg["min_inliers"])
-        and inlier_ratio >= float(homography_cfg["min_inlier_ratio"])
-        and valid_homography
-    )
+            affine_stats = {
+                "good_matches": len(matches),
+                "inliers": affine_inliers,
+                "inlier_ratio": affine_inlier_ratio,
+                "success": affine_success,
+                "reason": affine_reason,
+                "canvas_bounds": affine_canvas_bounds,
+                "matrix": affine_h.round(6).tolist(),
+                "model": "affine_partial",
+            }
+            if affine_success:
+                return affine_h, affine_mask, affine_stats
 
-    if success:
-        reason = "ok"
-    elif valid_homography:
-        reason = "Homography rejected by inlier thresholds."
+            failure_reason = affine_reason
+            if homography_stats is not None:
+                failure_reason = f"Homography failed: {homography_stats['reason']}; affine_partial failed: {affine_reason}"
+            affine_stats["reason"] = failure_reason
+            affine_stats["fallback_from"] = homography_stats
+            return None, affine_mask, affine_stats
 
-    stats = {
+    if homography_stats is not None:
+        return None, homography_mask, homography_stats
+
+    return None, None, {
         "good_matches": len(matches),
-        "inliers": inliers,
-        "inlier_ratio": inlier_ratio,
-        "success": success,
-        "reason": reason,
-        "canvas_bounds": canvas_bounds,
-        "matrix": matrix.round(6).tolist(),
+        "inliers": 0,
+        "inlier_ratio": 0.0,
+        "success": False,
+        "reason": "RANSAC could not estimate a valid homography.",
+        "canvas_bounds": {},
+        "model": "homography",
     }
-    return matrix, mask, stats

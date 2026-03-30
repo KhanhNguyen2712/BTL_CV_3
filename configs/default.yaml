@@ -26,9 +26,14 @@ matching:
   ratio: 0.7
   min_good_matches: 30
   symmetry_check: true
+  fallback_cross_check: true
+  pairwise_grid_rows: 2
+  pairwise_grid_cols: 3
+  pairwise_min_occupied_cells: 3
 
 homography:
   method: ransac
+  fallback_affine_partial: true
   ransac_thresh: 5.0
   min_inliers: 20
   min_inlier_ratio: 0.55
@@ -36,6 +41,8 @@ homography:
   pairwise_max_canvas_height: 2500
   pairwise_max_canvas_pixels: 8000000
   pairwise_max_vertical_shift: 500
+  pairwise_max_center_shift_ratio_x: 0.45
+  pairwise_max_center_shift_ratio_y: 0.2
   max_canvas_width: 12000
   max_canvas_height: 6000
   max_canvas_pixels: 30000000
