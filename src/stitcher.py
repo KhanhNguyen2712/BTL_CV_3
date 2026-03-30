@@ -139,6 +139,7 @@ def _estimate_pairwise_homographies(images: List[ImageData], config: dict, outpu
             right_image.color.shape,
             left_image.color.shape,
             config,
+            pairwise=True,
         )
 
         _save_pair_debug_images(
@@ -183,6 +184,9 @@ def _accumulate_transforms(images: List[ImageData], pairwise_homographies: List[
 
     for idx in range(reference_idx - 1, -1, -1):
         transforms[idx] = transforms[idx + 1] @ pairwise_homographies[idx]
+        scale = transforms[idx][2, 2]
+        if abs(scale) > 1e-8:
+            transforms[idx] = transforms[idx] / scale
 
     for idx in range(reference_idx + 1, len(images)):
         try:
@@ -190,6 +194,9 @@ def _accumulate_transforms(images: List[ImageData], pairwise_homographies: List[
         except np.linalg.LinAlgError as exc:
             raise RuntimeError(f"Pairwise homography between images {idx - 1} and {idx} is singular.") from exc
         transforms[idx] = transforms[idx - 1] @ inverse_h
+        scale = transforms[idx][2, 2]
+        if abs(scale) > 1e-8:
+            transforms[idx] = transforms[idx] / scale
 
     return transforms
 

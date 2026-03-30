@@ -31,20 +31,40 @@ def _canvas_bounds(base_shape: tuple[int, ...], incoming_shape: tuple[int, ...],
     }
 
 
-def _validate_homography(base_shape: tuple[int, ...], incoming_shape: tuple[int, ...], homography: np.ndarray, config: dict) -> Tuple[bool, str, Dict]:
+def _normalize_homography(matrix: np.ndarray) -> np.ndarray:
+    normalized = matrix.astype(np.float64)
+    scale = normalized[2, 2]
+    if abs(scale) > 1e-8:
+        normalized = normalized / scale
+    return normalized
+
+
+def _validate_homography(
+    base_shape: tuple[int, ...],
+    incoming_shape: tuple[int, ...],
+    homography: np.ndarray,
+    config: dict,
+    pairwise: bool = False,
+) -> Tuple[bool, str, Dict]:
     if not np.isfinite(homography).all():
         return False, "Homography contains NaN or Inf values.", {}
 
+    normalized = _normalize_homography(homography)
     try:
-        incoming_to_base = np.linalg.inv(homography)
+        incoming_to_base = np.linalg.inv(normalized)
     except np.linalg.LinAlgError:
         return False, "Homography matrix is singular and cannot be inverted.", {}
 
     bounds = _canvas_bounds(base_shape, incoming_shape, incoming_to_base)
     homography_cfg = config["homography"]
-    max_width = int(homography_cfg.get("max_canvas_width", 12000))
-    max_height = int(homography_cfg.get("max_canvas_height", 6000))
-    max_pixels = int(homography_cfg.get("max_canvas_pixels", 30000000))
+    if pairwise:
+        max_width = int(homography_cfg.get("pairwise_max_canvas_width", 4000))
+        max_height = int(homography_cfg.get("pairwise_max_canvas_height", 2500))
+        max_pixels = int(homography_cfg.get("pairwise_max_canvas_pixels", 8000000))
+    else:
+        max_width = int(homography_cfg.get("max_canvas_width", 12000))
+        max_height = int(homography_cfg.get("max_canvas_height", 6000))
+        max_pixels = int(homography_cfg.get("max_canvas_pixels", 30000000))
 
     if bounds["width"] <= 0 or bounds["height"] <= 0:
         return False, "Projected canvas has non-positive dimensions.", bounds
@@ -58,6 +78,24 @@ def _validate_homography(base_shape: tuple[int, ...], incoming_shape: tuple[int,
     if bounds["pixels"] > max_pixels:
         return False, f"Projected canvas area {bounds['pixels']} exceeds limit {max_pixels}.", bounds
 
+    if pairwise:
+        base_h, base_w = base_shape[:2]
+        incoming_h, incoming_w = incoming_shape[:2]
+        base_center = np.array([base_w / 2.0, base_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
+        incoming_center = np.array([incoming_w / 2.0, incoming_h / 2.0], dtype=np.float32).reshape(1, 1, 2)
+        projected_center = cv2.perspectiveTransform(incoming_center, incoming_to_base).reshape(2)
+        base_center = base_center.reshape(2)
+        delta_x = float(projected_center[0] - base_center[0])
+        delta_y = float(projected_center[1] - base_center[1])
+        bounds["center_shift"] = {"dx": delta_x, "dy": delta_y}
+
+        max_vertical_shift = float(homography_cfg.get("pairwise_max_vertical_shift", 500))
+        if abs(delta_y) > max_vertical_shift:
+            return False, f"Projected vertical shift {delta_y:.2f} exceeds limit {max_vertical_shift}.", bounds
+
+        if abs(delta_y) > abs(delta_x) and abs(delta_x) > 1.0:
+            return False, "Projected motion is dominated by vertical shift, inconsistent with horizontal panorama.", bounds
+
     return True, "ok", bounds
 
 
@@ -68,6 +106,7 @@ def estimate_homography(
     base_shape: tuple[int, ...],
     incoming_shape: tuple[int, ...],
     config: dict,
+    pairwise: bool = False,
 ) -> Tuple[np.ndarray | None, np.ndarray | None, Dict]:
     min_good_matches = int(config["matching"].get("min_good_matches", 20))
     if len(matches) < min_good_matches:
@@ -105,9 +144,16 @@ def estimate_homography(
             "canvas_bounds": {},
         }
 
+    matrix = _normalize_homography(matrix)
     inliers = int(mask.ravel().sum())
     inlier_ratio = inliers / max(len(matches), 1)
-    valid_homography, reason, canvas_bounds = _validate_homography(base_shape, incoming_shape, matrix, config)
+    valid_homography, reason, canvas_bounds = _validate_homography(
+        base_shape,
+        incoming_shape,
+        matrix,
+        config,
+        pairwise=pairwise,
+    )
 
     success = (
         inliers >= int(homography_cfg["min_inliers"])
@@ -127,5 +173,6 @@ def estimate_homography(
         "success": success,
         "reason": reason,
         "canvas_bounds": canvas_bounds,
+        "matrix": matrix.round(6).tolist(),
     }
     return matrix, mask, stats

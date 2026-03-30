@@ -23,14 +23,19 @@ matching:
   matcher: bf
   norm: hamming
   knn_k: 2
-  ratio: 0.75
-  min_good_matches: 20
+  ratio: 0.7
+  min_good_matches: 30
+  symmetry_check: true
 
 homography:
   method: ransac
   ransac_thresh: 5.0
-  min_inliers: 15
-  min_inlier_ratio: 0.3
+  min_inliers: 20
+  min_inlier_ratio: 0.55
+  pairwise_max_canvas_width: 4000
+  pairwise_max_canvas_height: 2500
+  pairwise_max_canvas_pixels: 8000000
+  pairwise_max_vertical_shift: 500
   max_canvas_width: 12000
   max_canvas_height: 6000
   max_canvas_pixels: 30000000
