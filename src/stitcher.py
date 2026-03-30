@@ -148,7 +148,14 @@ def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) 
         incoming_kp, incoming_desc = extract_features(extractor, image.gray)
 
         raw_matches, good_matches = match_descriptors(matcher, base_desc, incoming_desc, config)
-        homography, mask, homography_stats = estimate_homography(base_kp, incoming_kp, good_matches, config)
+        homography, mask, homography_stats = estimate_homography(
+            base_kp,
+            incoming_kp,
+            good_matches,
+            state.color.shape,
+            image.color.shape,
+            config,
+        )
 
         _save_debug_images(
             output_path,
@@ -201,7 +208,19 @@ def run_panorama(images: List[ImageData], config: dict, output_dir: str | Path) 
             write_image(output_path / "panorama_final.jpg", state.color)
             return summary
 
-        panorama, warp_debug = stitch_pair(state.color, image.color, incoming_to_base, config)
+        try:
+            panorama, warp_debug = stitch_pair(state.color, image.color, incoming_to_base, config)
+        except ValueError as exc:
+            step_summary["status"] = "failed"
+            step_summary["warp_error"] = str(exc)
+            summary["steps"].append(step_summary)
+            summary["status"] = "failed"
+            summary["failure_reason"] = f"Failed at {step_name}: {exc}"
+            summary["failed_step"] = step_index
+            summary["final_panorama_shape"] = list(state.color.shape)
+            write_image(output_path / "panorama_final.jpg", state.color)
+            return summary
+
         state = PanoramaState(
             name=f"{state.name}__{image.name}",
             color=panorama,

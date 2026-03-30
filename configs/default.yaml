@@ -31,6 +31,9 @@ homography:
   ransac_thresh: 5.0
   min_inliers: 15
   min_inlier_ratio: 0.3
+  max_canvas_width: 12000
+  max_canvas_height: 6000
+  max_canvas_pixels: 30000000
 
 blend:
   mode: feather

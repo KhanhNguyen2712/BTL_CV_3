@@ -53,6 +53,19 @@ def crop_valid_region(image: np.ndarray) -> np.ndarray:
 
 def stitch_pair(base_image: np.ndarray, incoming_image: np.ndarray, homography: np.ndarray, config: dict):
     translation, width, height = _compute_canvas(base_image, incoming_image, homography)
+    homography_cfg = config["homography"]
+    max_width = int(homography_cfg.get("max_canvas_width", 12000))
+    max_height = int(homography_cfg.get("max_canvas_height", 6000))
+    max_pixels = int(homography_cfg.get("max_canvas_pixels", 30000000))
+
+    if width <= 0 or height <= 0:
+        raise ValueError(f"Invalid canvas size computed from homography: width={width}, height={height}")
+    if width > max_width or height > max_height or width * height > max_pixels:
+        raise ValueError(
+            "Projected canvas exceeds configured safety limits: "
+            f"width={width}, height={height}, pixels={width * height}"
+        )
+
     total_transform = translation @ homography
 
     warped_incoming = cv2.warpPerspective(incoming_image, total_transform, (width, height))
