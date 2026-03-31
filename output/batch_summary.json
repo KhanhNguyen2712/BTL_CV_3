@@ -1,0 +1,30 @@
+{
+  "input_root": "input",
+  "output_root": "output",
+  "datasets": [
+    {
+      "name": "base",
+      "input_dir": "input/base",
+      "output_dir": "output/base",
+      "status": "ok",
+      "failure_reason": null,
+      "capture_direction": "right_to_left"
+    },
+    {
+      "name": "l1",
+      "input_dir": "input/l1",
+      "output_dir": "output/l1",
+      "status": "ok",
+      "failure_reason": null,
+      "capture_direction": "left_to_right"
+    },
+    {
+      "name": "l2",
+      "input_dir": "input/l2",
+      "output_dir": "output/l2",
+      "status": "ok",
+      "failure_reason": null,
+      "capture_direction": "left_to_right"
+    }
+  ]
+}

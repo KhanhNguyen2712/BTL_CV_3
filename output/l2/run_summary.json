@@ -1,0 +1,390 @@
+{
+  "feature": "orb",
+  "reference_index": 2,
+  "reference_name": "2_3",
+  "images": [
+    "2_1",
+    "2_2",
+    "2_3",
+    "2_4",
+    "2_5"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "left_name": "2_1",
+      "right_name": "2_2",
+      "left_keypoints": 2867,
+      "right_keypoints": 2910,
+      "raw_match_groups": 2867,
+      "good_matches": 419,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 5,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 419,
+        "inliers": 333,
+        "inlier_ratio": 0.7947494033412887,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -340,
+          "y_min": -24,
+          "x_max": 653,
+          "y_max": 490,
+          "width": 993,
+          "height": 514,
+          "pixels": 510402,
+          "center_shift": {
+            "dx": -333.5005798339844,
+            "dy": -16.062469482421875
+          }
+        },
+        "matrix": [
+          [
+            1.000624,
+            -0.023452,
+            -327.958694
+          ],
+          [
+            0.023452,
+            1.000624,
+            -23.872313
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 2,
+      "left_name": "2_2",
+      "right_name": "2_3",
+      "left_keypoints": 2910,
+      "right_keypoints": 3000,
+      "raw_match_groups": 2910,
+      "good_matches": 234,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 5,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 234,
+        "inliers": 186,
+        "inlier_ratio": 0.7948717948717948,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -345,
+          "y_min": -1,
+          "x_max": 653,
+          "y_max": 500,
+          "width": 998,
+          "height": 501,
+          "pixels": 499998,
+          "center_shift": {
+            "dx": -341.1319885253906,
+            "dy": 4.4634246826171875
+          }
+        },
+        "matrix": [
+          [
+            0.995269,
+            -0.019131,
+            -334.900206
+          ],
+          [
+            0.019131,
+            0.995269,
+            -0.623798
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 3,
+      "left_name": "2_3",
+      "right_name": "2_4",
+      "left_keypoints": 3000,
+      "right_keypoints": 2976,
+      "raw_match_groups": 3000,
+      "good_matches": 428,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 4,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 428,
+        "inliers": 348,
+        "inlier_ratio": 0.8130841121495327,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -351,
+          "y_min": -19,
+          "x_max": 653,
+          "y_max": 490,
+          "width": 1004,
+          "height": 509,
+          "pixels": 511036,
+          "center_shift": {
+            "dx": -342.2377014160156,
+            "dy": -10.7650146484375
+          }
+        },
+        "matrix": [
+          [
+            1.018598,
+            -0.010084,
+            -345.839307
+          ],
+          [
+            0.010084,
+            1.018598,
+            -18.613837
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 4,
+      "left_name": "2_4",
+      "right_name": "2_5",
+      "left_keypoints": 2976,
+      "right_keypoints": 2978,
+      "raw_match_groups": 2976,
+      "good_matches": 222,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 4,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 222,
+        "inliers": 213,
+        "inlier_ratio": 0.9594594594594594,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -360,
+          "y_min": -32,
+          "x_max": 653,
+          "y_max": 495,
+          "width": 1013,
+          "height": 527,
+          "pixels": 533851,
+          "center_shift": {
+            "dx": -348.1368103027344,
+            "dy": -13.704681396484375
+          }
+        },
+        "matrix": [
+          [
+            0.984103,
+            -0.067033,
+            -326.523224
+          ],
+          [
+            0.067033,
+            0.984103,
+            -31.696048
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    }
+  ],
+  "status": "ok",
+  "global_transforms": {
+    "2_1": [
+      [
+        0.995441,
+        -0.042484,
+        -660.850637
+      ],
+      [
+        0.042484,
+        0.995441,
+        -30.657384
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "2_2": [
+      [
+        0.995269,
+        -0.019131,
+        -334.900206
+      ],
+      [
+        0.019131,
+        0.995269,
+        -0.623798
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "2_3": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "2_4": [
+      [
+        0.981646,
+        0.009718,
+        339.67254
+      ],
+      [
+        -0.009718,
+        0.981646,
+        14.911309
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "2_5": [
+      [
+        0.992227,
+        0.077461,
+        666.11294
+      ],
+      [
+        -0.077461,
+        0.992227,
+        21.068061
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "composition": {
+    "canvas_size": {
+      "width": 2034,
+      "height": 539
+    },
+    "translation": {
+      "x": 682.0,
+      "y": 31.0
+    },
+    "images": [
+      {
+        "name": "2_1",
+        "shape": [
+          490,
+          653,
+          3
+        ]
+      },
+      {
+        "name": "2_2",
+        "shape": [
+          490,
+          653,
+          3
+        ]
+      },
+      {
+        "name": "2_3",
+        "shape": [
+          490,
+          653,
+          3
+        ]
+      },
+      {
+        "name": "2_4",
+        "shape": [
+          490,
+          653,
+          3
+        ]
+      },
+      {
+        "name": "2_5",
+        "shape": [
+          490,
+          653,
+          3
+        ]
+      }
+    ],
+    "valid_pixels": 990015
+  },
+  "panorama_full_shape": [
+    539,
+    2034,
+    3
+  ],
+  "final_panorama_shape": [
+    539,
+    2034,
+    3
+  ],
+  "input": {
+    "name": "l2",
+    "path": "input/l2"
+  },
+  "applied_capture_direction": "left_to_right"
+}

@@ -1,0 +1,471 @@
+{
+  "feature": "orb",
+  "reference_index": 3,
+  "reference_name": "STD_0034",
+  "images": [
+    "STA_0031",
+    "STB_0032",
+    "STC_0033",
+    "STD_0034",
+    "STE_0035",
+    "STF_0036"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "left_name": "STA_0031",
+      "right_name": "STB_0032",
+      "left_keypoints": 3000,
+      "right_keypoints": 3000,
+      "raw_match_groups": 3000,
+      "good_matches": 92,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 4,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 92,
+        "inliers": 57,
+        "inlier_ratio": 0.6195652173913043,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -1018,
+          "y_min": -24,
+          "x_max": 1600,
+          "y_max": 1224,
+          "width": 2618,
+          "height": 1248,
+          "pixels": 3267264,
+          "center_shift": {
+            "dx": -1001.1542358398438,
+            "dy": 0.0567626953125
+          }
+        },
+        "matrix": [
+          [
+            0.995115,
+            -0.032946,
+            -977.478882
+          ],
+          [
+            0.032946,
+            0.995115,
+            -23.36922
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 2,
+      "left_name": "STB_0032",
+      "right_name": "STC_0033",
+      "left_keypoints": 3000,
+      "right_keypoints": 3000,
+      "raw_match_groups": 3000,
+      "good_matches": 306,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 3,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 306,
+        "inliers": 211,
+        "inlier_ratio": 0.6895424836601307,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -741,
+          "y_min": -31,
+          "x_max": 1600,
+          "y_max": 1232,
+          "width": 2341,
+          "height": 1263,
+          "pixels": 2956683,
+          "center_shift": {
+            "dx": -780.70166015625,
+            "dy": -24.67132568359375
+          }
+        },
+        "matrix": [
+          [
+            0.889012,
+            -0.0686,
+            -651.497624
+          ],
+          [
+            0.022401,
+            0.942037,
+            -30.071258
+          ],
+          [
+            -4.3e-05,
+            -8e-06,
+            1.0
+          ]
+        ],
+        "model": "homography"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 3,
+      "left_name": "STC_0033",
+      "right_name": "STD_0034",
+      "left_keypoints": 3000,
+      "right_keypoints": 3000,
+      "raw_match_groups": 3000,
+      "good_matches": 152,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 4,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 152,
+        "inliers": 63,
+        "inlier_ratio": 0.4144736842105263,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -847,
+          "y_min": -47,
+          "x_max": 1600,
+          "y_max": 1208,
+          "width": 2447,
+          "height": 1255,
+          "pixels": 3070985,
+          "center_shift": {
+            "dx": -827.2365112304688,
+            "dy": -19.18536376953125
+          }
+        },
+        "matrix": [
+          [
+            0.996715,
+            -0.036369,
+            -802.787341
+          ],
+          [
+            0.036369,
+            0.996715,
+            -46.309176
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "model": "affine_partial"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 4,
+      "left_name": "STD_0034",
+      "right_name": "STE_0035",
+      "left_keypoints": 3000,
+      "right_keypoints": 3000,
+      "raw_match_groups": 3000,
+      "good_matches": 626,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 4,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 626,
+        "inliers": 526,
+        "inlier_ratio": 0.8402555910543131,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -733,
+          "y_min": -14,
+          "x_max": 1600,
+          "y_max": 1231,
+          "width": 2333,
+          "height": 1245,
+          "pixels": 2904585,
+          "center_shift": {
+            "dx": -680.38671875,
+            "dy": -15.2235107421875
+          }
+        },
+        "matrix": [
+          [
+            1.000503,
+            -0.021702,
+            -669.283079
+          ],
+          [
+            -0.013462,
+            0.967187,
+            7.826218
+          ],
+          [
+            1.6e-05,
+            -4.2e-05,
+            1.0
+          ]
+        ],
+        "model": "homography"
+      },
+      "status": "ok"
+    },
+    {
+      "step": 5,
+      "left_name": "STE_0035",
+      "right_name": "STF_0036",
+      "left_keypoints": 3000,
+      "right_keypoints": 3000,
+      "raw_match_groups": 3000,
+      "good_matches": 332,
+      "matching": {
+        "strategy": "knn_ratio_symmetry",
+        "grid_occupancy": 6,
+        "grid_rows": 2,
+        "grid_cols": 3,
+        "min_required_cells": 3
+      },
+      "homography": {
+        "good_matches": 332,
+        "inliers": 315,
+        "inlier_ratio": 0.9487951807228916,
+        "success": true,
+        "reason": "ok",
+        "canvas_bounds": {
+          "x_min": -999,
+          "y_min": -57,
+          "x_max": 1600,
+          "y_max": 1257,
+          "width": 2599,
+          "height": 1314,
+          "pixels": 3415086,
+          "center_shift": {
+            "dx": -881.2511596679688,
+            "dy": 1.22003173828125
+          }
+        },
+        "matrix": [
+          [
+            1.126543,
+            -0.014835,
+            -978.454743
+          ],
+          [
+            0.048052,
+            1.092821,
+            -56.877051
+          ],
+          [
+            7.6e-05,
+            -2e-06,
+            1.0
+          ]
+        ],
+        "model": "homography"
+      },
+      "status": "ok"
+    }
+  ],
+  "status": "ok",
+  "global_transforms": {
+    "STA_0031": [
+      [
+        0.87521,
+        -0.121146,
+        -2253.440895
+      ],
+      [
+        0.083721,
+        0.893088,
+        -170.120458
+      ],
+      [
+        -4.1e-05,
+        -6e-06,
+        1.0
+      ]
+    ],
+    "STB_0032": [
+      [
+        0.919408,
+        -0.096383,
+        -1451.051127
+      ],
+      [
+        0.056629,
+        0.936808,
+        -99.975664
+      ],
+      [
+        -4.3e-05,
+        -8e-06,
+        1.0
+      ]
+    ],
+    "STC_0033": [
+      [
+        0.996715,
+        -0.036369,
+        -802.787341
+      ],
+      [
+        0.036369,
+        0.996715,
+        -46.309176
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "STD_0034": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "STE_0035": [
+      [
+        1.000139,
+        0.051538,
+        668.972949
+      ],
+      [
+        0.014043,
+        1.045112,
+        1.219307
+      ],
+      [
+        -1.5e-05,
+        4.3e-05,
+        1.0
+      ]
+    ],
+    "STF_0036": [
+      [
+        0.850486,
+        0.06468,
+        1558.079942
+      ],
+      [
+        -0.032473,
+        1.03209,
+        28.245606
+      ],
+      [
+        -8.4e-05,
+        4.3e-05,
+        1.0
+      ]
+    ]
+  },
+  "composition": {
+    "canvas_size": {
+      "width": 5789,
+      "height": 1496
+    },
+    "translation": {
+      "x": 2417.0,
+      "y": 171.0
+    },
+    "images": [
+      {
+        "name": "STA_0031",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      },
+      {
+        "name": "STB_0032",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      },
+      {
+        "name": "STC_0033",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      },
+      {
+        "name": "STD_0034",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      },
+      {
+        "name": "STE_0035",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      },
+      {
+        "name": "STF_0036",
+        "shape": [
+          1200,
+          1600,
+          3
+        ]
+      }
+    ],
+    "valid_pixels": 6851047
+  },
+  "panorama_full_shape": [
+    1496,
+    5789,
+    3
+  ],
+  "final_panorama_shape": [
+    1496,
+    5789,
+    3
+  ],
+  "input": {
+    "name": "l1",
+    "path": "input/l1"
+  },
+  "applied_capture_direction": "left_to_right"
+}
