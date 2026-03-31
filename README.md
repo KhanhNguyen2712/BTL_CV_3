@@ -128,7 +128,8 @@ Nếu chạy nhiều dataset cùng lúc từ `input/`, thư mục `output/` còn
 - Ảnh trong từng thư mục dataset phải có thứ tự đúng theo chuỗi chụp.
 - `configs/default.yaml` hiện cho phép override theo từng dataset:
   - `base`: `right_to_left`
-  - `l1`, `l2`: `left_to_right`
+  - `l1`: `left_to_right`
+  - `l2`: `left_to_right` và ưu tiên `affine_partial` ở pairwise estimation để tránh projective drift
 - Mặc định chung không khóa cứng hướng chụp; nếu cần có thể thêm dataset mới vào `dataset_overrides`.
 - Nếu ảnh bị xáo trộn thứ tự, pipeline hiện tại không tự sắp xếp lại.
 

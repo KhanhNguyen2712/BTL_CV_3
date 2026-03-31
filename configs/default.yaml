@@ -68,3 +68,4 @@ dataset_overrides:
   l2:
     homography:
       capture_direction: left_to_right
+      pairwise_model_preference: affine_first

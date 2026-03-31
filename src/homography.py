@@ -226,31 +226,35 @@ def estimate_homography(
     affine_min_inliers = int(homography_cfg.get("affine_min_inliers", min_inliers))
     affine_min_inlier_ratio = float(homography_cfg.get("affine_min_inlier_ratio", min_inlier_ratio))
     ransac_threshold = float(homography_cfg["ransac_thresh"])
-
-    homography_matrix, homography_mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, ransac_threshold)
-    homography_matrix, homography_mask, homography_stats = _evaluate_model(
-        homography_matrix,
-        homography_mask,
-        base_shape=base_shape,
-        incoming_shape=incoming_shape,
-        matches_count=len(matches),
-        min_inliers=min_inliers,
-        min_inlier_ratio=min_inlier_ratio,
-        config=config,
-        pairwise=pairwise,
-        model="homography",
+    prefer_affine_first = (
+        pairwise
+        and homography_cfg.get("fallback_affine_partial", True)
+        and str(homography_cfg.get("pairwise_model_preference", "homography_first")).lower() == "affine_first"
     )
-    if homography_stats and homography_stats["success"]:
-        return homography_matrix, homography_mask, homography_stats
 
-    if pairwise and homography_cfg.get("fallback_affine_partial", True):
+    def evaluate_homography():
+        homography_matrix, homography_mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, ransac_threshold)
+        return _evaluate_model(
+            homography_matrix,
+            homography_mask,
+            base_shape=base_shape,
+            incoming_shape=incoming_shape,
+            matches_count=len(matches),
+            min_inliers=min_inliers,
+            min_inlier_ratio=min_inlier_ratio,
+            config=config,
+            pairwise=pairwise,
+            model="homography",
+        )
+
+    def evaluate_affine():
         affine_matrix, affine_mask = cv2.estimateAffinePartial2D(
             src_pts,
             dst_pts,
             method=cv2.RANSAC,
             ransacReprojThreshold=ransac_threshold,
         )
-        affine_matrix, affine_mask, affine_stats = _evaluate_model(
+        return _evaluate_model(
             affine_matrix,
             affine_mask,
             base_shape=base_shape,
@@ -262,15 +266,47 @@ def estimate_homography(
             pairwise=pairwise,
             model="affine_partial",
         )
+
+    affine_matrix = affine_mask = affine_stats = None
+    homography_matrix = homography_mask = homography_stats = None
+
+    if prefer_affine_first:
+        affine_matrix, affine_mask, affine_stats = evaluate_affine()
         if affine_stats and affine_stats["success"]:
             return affine_matrix, affine_mask, affine_stats
-        if affine_stats:
-            if homography_stats is not None:
-                affine_stats["fallback_from"] = homography_stats
-                affine_stats["reason"] = f"Homography failed: {homography_stats['reason']}; affine_partial failed: {affine_stats['reason']}"
-            return None, affine_mask, affine_stats
 
-    if homography_stats is not None:
-        return None, homography_mask, homography_stats
+        homography_matrix, homography_mask, homography_stats = evaluate_homography()
+        if homography_stats and homography_stats["success"]:
+            if affine_stats is not None:
+                homography_stats["fallback_from"] = affine_stats
+            return homography_matrix, homography_mask, homography_stats
+
+        if homography_stats is not None and affine_stats is not None:
+            homography_stats["fallback_from"] = affine_stats
+            homography_stats["reason"] = (
+                f"Affine_partial failed: {affine_stats['reason']}; homography failed: {homography_stats['reason']}"
+            )
+            return None, homography_mask, homography_stats
+        if affine_stats is not None:
+            return None, affine_mask, affine_stats
+    else:
+        homography_matrix, homography_mask, homography_stats = evaluate_homography()
+        if homography_stats and homography_stats["success"]:
+            return homography_matrix, homography_mask, homography_stats
+
+        if pairwise and homography_cfg.get("fallback_affine_partial", True):
+            affine_matrix, affine_mask, affine_stats = evaluate_affine()
+            if affine_stats and affine_stats["success"]:
+                return affine_matrix, affine_mask, affine_stats
+            if affine_stats:
+                if homography_stats is not None:
+                    affine_stats["fallback_from"] = homography_stats
+                    affine_stats["reason"] = (
+                        f"Homography failed: {homography_stats['reason']}; affine_partial failed: {affine_stats['reason']}"
+                    )
+                return None, affine_mask, affine_stats
+
+        if homography_stats is not None:
+            return None, homography_mask, homography_stats
 
     return None, None, _failure_stats(len(matches), "RANSAC could not estimate a valid homography.")
