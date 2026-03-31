@@ -34,7 +34,7 @@ matching:
 homography:
   method: ransac
   fallback_affine_partial: true
-  capture_direction: right_to_left
+  capture_direction: ""
   ransac_thresh: 5.0
   min_inliers: 20
   min_inlier_ratio: 0.55
@@ -57,3 +57,14 @@ blend:
 debug:
   save_keypoints: true
   save_matches: true
+
+dataset_overrides:
+  base:
+    homography:
+      capture_direction: right_to_left
+  l1:
+    homography:
+      capture_direction: left_to_right
+  l2:
+    homography:
+      capture_direction: left_to_right

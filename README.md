@@ -18,7 +18,7 @@ Pipeline hiện tại gồm các bước:
 - feather blend các vùng chồng lấn,
 - crop phần viền đen để tạo ra ảnh panorama cuối cùng.
 
-Phiên bản hiện tại đã được tinh chỉnh để chạy ổn định với bộ ảnh trong `input/`.
+Phiên bản hiện tại đã được tinh chỉnh để chạy ổn định với các bộ ảnh đặt trong `input/`.
 
 ## Pipeline Diagram
 ```mermaid
@@ -70,7 +70,13 @@ flowchart TD
 ├── assets/
 │   └── panorama_final.jpg
 ├── input/
+│   ├── base/
+│   ├── l1/
+│   └── l2/
 ├── output/
+│   ├── base/
+│   ├── l1/
+│   └── l2/
 ├── src/
 │   ├── main.py
 │   ├── preprocess.py
@@ -96,8 +102,18 @@ Chạy từ thư mục gốc của repo:
 python3 -m src.main --input_dir input --output_dir output --config configs/default.yaml
 ```
 
+Script sẽ:
+- nếu `input/` chứa ảnh trực tiếp, ghi kết quả vào `output/<tên_thư_mục_input>/`,
+- nếu `input/` chứa nhiều thư mục con như `base/`, `l1/`, `l2/`, tự chạy từng bộ và ghi ra `output/base/`, `output/l1/`, `output/l2/`.
+
+Ví dụ chạy riêng một bộ:
+
+```bash
+python3 -m src.main --input_dir input/l1 --output_dir output --config configs/default.yaml
+```
+
 ## Kết quả đầu ra
-Sau khi chạy thành công, thư mục `output/` sẽ có:
+Sau khi chạy thành công, mỗi thư mục dataset trong `output/<dataset_name>/` sẽ có:
 - `panorama_final.jpg`: ảnh panorama cuối cùng đã crop viền đen
 - `run_summary.json`: log toàn bộ pipeline
 - các ảnh debug:
@@ -106,9 +122,14 @@ Sau khi chạy thành công, thư mục `output/` sẽ có:
   - good matches
   - inlier matches
 
+Nếu chạy nhiều dataset cùng lúc từ `input/`, thư mục `output/` còn có thêm `batch_summary.json`.
+
 ## Các giả định hiện tại
-- Ảnh trong `input/` phải có thứ tự đúng theo chuỗi chụp.
-- Với bộ dữ liệu đang dùng, ảnh được chụp theo hướng `right_to_left` theo thứ tự tên file tăng dần.
+- Ảnh trong từng thư mục dataset phải có thứ tự đúng theo chuỗi chụp.
+- `configs/default.yaml` hiện cho phép override theo từng dataset:
+  - `base`: `right_to_left`
+  - `l1`, `l2`: `left_to_right`
+- Mặc định chung không khóa cứng hướng chụp; nếu cần có thể thêm dataset mới vào `dataset_overrides`.
 - Nếu ảnh bị xáo trộn thứ tự, pipeline hiện tại không tự sắp xếp lại.
 
 ## Một vài quyết định kỹ thuật
@@ -122,4 +143,3 @@ Sau khi chạy thành công, thư mục `output/` sẽ có:
 - Chưa có bundle adjustment.
 - Chưa có seam finding tối ưu hoặc exposure compensation.
 - Chưa có detector thứ hai để so sánh như `SIFT` hoặc `SURF`.
-
