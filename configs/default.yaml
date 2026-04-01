@@ -1,71 +1,71 @@
 resize:
-  max_long_edge: 1600
+  max_long_edge: 1600 # Maximum length of the longer edge of the image after resizing. Set to None to disable resizing.
 
 preprocess:
-  gaussian_blur: true
-  gaussian_kernel: 5
-  equalize_hist: false
+  gaussian_blur: true # Apply Gaussian blur to the images before feature detection. This can help reduce noise and improve feature matching.
+  gaussian_kernel: 5 # Size of the Gaussian kernel. Must be a positive odd integer.
+  equalize_hist: false # Apply histogram equalization to the images before feature detection. This can improve contrast and help with feature detection in low-contrast areas.
 
 feature:
   name: orb
   orb:
-    nfeatures: 3000
-    scaleFactor: 1.2
-    nlevels: 8
-    edgeThreshold: 31
-    firstLevel: 0
-    WTA_K: 2
-    scoreType: HARRIS_SCORE
-    patchSize: 31
-    fastThreshold: 20
+    nfeatures: 3000 # Number of features to detect.
+    scaleFactor: 1.2 # Scale factor between levels in the scale space.
+    nlevels: 8 # Number of levels in the scale space.
+    edgeThreshold: 31 # Edge threshold for feature detection.
+    firstLevel: 0 # Level of the scale space where the image is initially placed.
+    WTA_K: 2 # Number of best matches to consider for each feature.
+    scoreType: HARRIS_SCORE # Score type for ranking features. Can be HARRIS_SCORE or FAST_SCORE.
+    patchSize: 31 # Size of the patch used by the oriented BRIEF descriptor. Must be a positive odd integer.
+    fastThreshold: 20 # Threshold for the FAST corner detector used in ORB. Higher values will result in fewer features being detected, while lower values will result in more features being detected. Adjust this value based on the characteristics of your images and the desired number of features.
 
 matching:
-  matcher: bf
-  norm: hamming
-  knn_k: 2
-  ratio: 0.7
-  min_good_matches: 30
-  symmetry_check: true
-  fallback_cross_check: true
-  pairwise_grid_rows: 2
-  pairwise_grid_cols: 3
-  pairwise_min_occupied_cells: 3
+  matcher: bf # Brute-force matcher.
+  norm: hamming # Norm type for feature matching. Use 'hamming' for binary descriptors like ORB, and 'l2' for float descriptors like SIFT.
+  knn_k: 2 # Number of nearest neighbors to consider for each feature.
+  ratio: 0.7 # Ratio test for filtering matches.
+  min_good_matches: 30 # Minimum number of good matches required.
+  symmetry_check: true # Perform symmetry check for feature matching.
+  fallback_cross_check: true # Perform cross-check for fallback matching.
+  pairwise_grid_rows: 2 # Number of rows in the pairwise matching grid.
+  pairwise_grid_cols: 3 # Number of columns in the pairwise matching grid.
+  pairwise_min_occupied_cells: 3 # Minimum number of occupied cells in the pairwise matching grid.
 
 homography:
-  method: ransac
-  fallback_affine_partial: true
-  capture_direction: ""
-  ransac_thresh: 5.0
-  min_inliers: 20
-  min_inlier_ratio: 0.55
-  affine_min_inliers: 20
-  affine_min_inlier_ratio: 0.28
-  pairwise_max_canvas_width: 4000
-  pairwise_max_canvas_height: 2500
-  pairwise_max_canvas_pixels: 8000000
-  pairwise_max_vertical_shift: 500
-  pairwise_max_center_shift_ratio_x: 0.6
-  pairwise_max_center_shift_ratio_y: 0.2
-  max_canvas_width: 12000
-  max_canvas_height: 6000
-  max_canvas_pixels: 30000000
+  method: ransac # Method for homography estimation. Can be 'ransac' or 'affine'.
+  fallback_affine_partial: true # If true, will attempt to estimate an affine transformation using all matches if RANSAC fails, even if the number of inliers is below the threshold. This can help in cases where the images have very little overlap or when the scene is mostly planar.
+  capture_direction: "" # Direction of capture for homography estimation. Can be 'left_to_right', 'right_to_left', or empty for no preference. This can help guide the homography estimation process, especially in cases where the images have a strong directional bias (e.g., a panorama captured by panning from left to right).
+  ransac_thresh: 5.0 # RANSAC reprojection threshold in pixels. This is the maximum allowed distance between the observed and projected points to consider a match as an inlier. Adjust this value based on the expected noise level in your images and the desired balance between precision and recall.
+  min_inliers: 20 # Minimum number of inliers required for a valid homography. Adjust this value based on the expected overlap between the images and the desired robustness of the homography estimation.
+  min_inlier_ratio: 0.55 # Minimum inlier ratio required for a valid homography. This is the ratio of inliers to total matches. Adjust this value based on the expected overlap between the images and the desired robustness of the homography estimation.
+  affine_min_inliers: 20 # Minimum number of inliers required for a valid affine transformation. Adjust this value based on the expected overlap between the images and the desired robustness of the affine estimation.
+  affine_min_inlier_ratio: 0.28 # Minimum inlier ratio required for a valid affine transformation. This is the ratio of inliers to total matches. Adjust this value based on the expected overlap between the images and the desired robustness of the affine estimation.
+  pairwise_max_canvas_width: 4000 # Maximum width of the canvas for pairwise matching.
+  pairwise_max_canvas_height: 2500 # Maximum height of the canvas for pairwise matching.
+  pairwise_max_canvas_pixels: 8000000 # Maximum number of pixels in the canvas for pairwise matching.
+  pairwise_max_vertical_shift: 500 # Maximum vertical shift allowed in pairwise matching.
+  pairwise_max_center_shift_ratio_x: 0.6 # Maximum horizontal center shift ratio allowed in pairwise matching.
+  pairwise_max_center_shift_ratio_y: 0.2 # Maximum vertical center shift ratio allowed in pairwise matching.
+  max_canvas_width: 12000 # Maximum width of the canvas.
+  max_canvas_height: 6000 # Maximum height of the canvas.
+  max_canvas_pixels: 30000000 # Maximum number of pixels in the canvas.
 
 blend:
-  mode: feather
-  feather_blur_kernel: 61
+  mode: feather # Blending mode for image stitching. Can be 'feather' or 'multiband'.
+  feather_blur_kernel: 61 # Size of the Gaussian kernel for feather blending. Must be a positive odd integer.
 
 debug:
-  save_keypoints: true
-  save_matches: true
+  save_keypoints: true # Save keypoints for debugging purposes.
+  save_matches: true # Save matches for debugging purposes.
 
 dataset_overrides:
   base:
     homography:
-      capture_direction: right_to_left
+      capture_direction: right_to_left 
   l1:
     homography:
       capture_direction: left_to_right
   l2:
     homography:
       capture_direction: left_to_right
-      pairwise_model_preference: affine_first
+      pairwise_model_preference: affine_first 
