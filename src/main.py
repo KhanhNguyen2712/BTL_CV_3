@@ -14,7 +14,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input_dir", default="input", help="Directory containing input images.")
     parser.add_argument("--output_dir", default="output", help="Directory used to save outputs.")
     parser.add_argument("--feature", default=None, help="Override feature extractor from config.")
-    parser.add_argument("--projection", default=None, help="Override projection mode from config.")
     parser.add_argument("--config", default="configs/default.yaml", help="Path to YAML config.")
     return parser
 
@@ -45,16 +44,12 @@ def _config_for_sequence(config: dict, sequence_name: str) -> dict:
     return merged_config
 
 
-def _apply_runtime_defaults(config: dict) -> dict:
+def _apply_feature_runtime_defaults(config: dict) -> dict:
     feature_name = str(config.get("feature", {}).get("name", "orb")).lower()
-    projection_mode = str(config.get("projection", {}).get("mode", "planar")).lower()
-    if projection_mode == "cylindrical" and feature_name != "sift":
-        raise ValueError("Projection mode 'cylindrical' is only supported with feature extractor 'sift'.")
-
     if feature_name != "sift":
         return config
 
-    sift_defaults: dict = {
+    sift_defaults = {
         "matching": {
             "matcher": "flann",
             "norm": "l2",
@@ -64,17 +59,6 @@ def _apply_runtime_defaults(config: dict) -> dict:
             "flann_checks": 50,
         }
     }
-    if projection_mode == "cylindrical":
-        sift_defaults = _deep_update(
-            sift_defaults,
-            {
-                "matching": {
-                    "symmetry_check": False,
-                    "fallback_cross_check": False,
-                    "pairwise_min_occupied_cells": 0,
-                }
-            },
-        )
     return _deep_update(config, sift_defaults)
 
 
@@ -83,9 +67,7 @@ def main() -> None:
     config = load_config(args.config)
     if args.feature:
         config["feature"]["name"] = args.feature
-    if args.projection:
-        config["projection"]["mode"] = args.projection
-    config = _apply_runtime_defaults(config)
+    config = _apply_feature_runtime_defaults(config)
 
     base_output_dir = ensure_dir(args.output_dir)
     input_sequences = discover_input_sequences(args.input_dir)
@@ -98,7 +80,7 @@ def main() -> None:
 
     for sequence in input_sequences:
         dataset_output_dir = _resolve_dataset_output_dir(base_output_dir, sequence.name, len(input_sequences))
-        dataset_config = _apply_runtime_defaults(_config_for_sequence(config, sequence.name))
+        dataset_config = _config_for_sequence(config, sequence.name)
         images = load_images(sequence.path, dataset_config)
         summary = run_panorama(images, dataset_config, dataset_output_dir)
         summary["input"] = {"name": sequence.name, "path": sequence.path}
