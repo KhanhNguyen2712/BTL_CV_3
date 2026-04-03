@@ -41,6 +41,16 @@ matching:
   pairwise_grid_cols: 3 # Number of columns in the pairwise matching grid.
   pairwise_min_occupied_cells: 3 # Minimum number of occupied cells in the pairwise matching grid.
 
+projection:
+  mode: planar # Panorama geometry mode. Use 'planar' for the current ORB/SIFT pipeline and 'cylindrical' for notebook-style SIFT stitching.
+  cylindrical:
+    fov_degrees: 60.0 # Horizontal field of view used to derive a focal length for cylindrical projection.
+    max_canvas_dim: 12000 # Maximum allowed width or height of the cylindrical panorama canvas before scaling it down.
+    min_good_matches: 10 # Minimum number of retained matches required before estimating translation from homography.
+    ransac_thresh: 5.0 # RANSAC reprojection threshold used when extracting translation from homography on cylindrical images.
+    blend_order: center_out # Sequential blend order for the cylindrical panorama. Currently only 'center_out' is supported.
+    motion_model: translation_from_homography # Estimate a full homography on cylindrical pairs, then keep only the translation terms.
+
 homography:
   method: ransac # Method for homography estimation. Can be 'ransac' or 'affine'.
   fallback_affine_partial: true # If true, will attempt to estimate an affine transformation using all matches if RANSAC fails, even if the number of inliers is below the threshold. This can help in cases where the images have very little overlap or when the scene is mostly planar.
