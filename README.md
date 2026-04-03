@@ -1,6 +1,6 @@
-# Panorama Stitching with ORB
+# Panorama Stitching with ORB and SIFT
 
-Project này hiện thực bài toán ghép ảnh toàn cảnh (panorama stitching) bằng `Python + OpenCV`, dùng `ORB` làm phương pháp trích xuất đặc trưng chính. Mục tiêu là ghép một chuỗi ảnh chụp liên tiếp thành một ảnh panorama cuối cùng, đồng thời lưu đủ ảnh và log trung gian để phục vụ phân tích và viết báo cáo.
+Project này hiện thực bài toán ghép ảnh toàn cảnh (panorama stitching) bằng `Python + OpenCV`, với hai backend trích xuất đặc trưng là `ORB` và `SIFT`. Mục tiêu là ghép một chuỗi ảnh chụp liên tiếp thành một ảnh panorama cuối cùng, đồng thời lưu đủ ảnh và log trung gian để phục vụ phân tích và viết báo cáo.
 
 ## Panorama Preview
 
@@ -10,7 +10,7 @@ Project này hiện thực bài toán ghép ảnh toàn cảnh (panorama stitchi
 Pipeline hiện tại gồm các bước:
 - đọc và resize ảnh đầu vào,
 - chuyển grayscale và tiền xử lý nhẹ,
-- trích keypoints/descriptors bằng ORB,
+- trích keypoints/descriptors bằng ORB hoặc SIFT,
 - so khớp đặc trưng giữa các cặp ảnh kề nhau,
 - ước lượng `homography` với fallback `affine partial` khi cần,
 - tích lũy transform về ảnh tham chiếu,
@@ -25,7 +25,7 @@ Phiên bản hiện tại đã được tinh chỉnh để chạy ổn định v
 flowchart TD
     A[Input images]
     B[Resize grayscale blur]
-    C[ORB keypoints descriptors]
+    C[ORB or SIFT keypoints descriptors]
     D[Pairwise feature matching]
     E[Ratio symmetry grid checks]
     F[Estimate homography]
@@ -112,6 +112,18 @@ Ví dụ chạy riêng một bộ:
 python3 -m src.main --input_dir input/l1 --output_dir output --config configs/default.yaml
 ```
 
+Chạy với backend `SIFT`:
+
+```bash
+python3 -m src.main --feature sift --input_dir input --output_dir output --config configs/default.yaml
+```
+
+Khi chọn `--feature sift`, pipeline sẽ tự chuyển sang bộ tham số matching phù hợp cho descriptor float:
+- `FLANN + L2`
+- `ratio = 0.75`
+- `max_good_matches = 200`
+- phát hiện đặc trưng trên ảnh resize về `detection_width = 600`, sau đó scale keypoint trở lại hệ tọa độ ảnh gốc
+
 ## Kết quả đầu ra
 Sau khi chạy thành công, mỗi thư mục dataset trong `output/<dataset_name>/` sẽ có:
 - `panorama_final.jpg`: ảnh panorama cuối cùng đã crop viền đen
@@ -134,7 +146,7 @@ Nếu chạy nhiều dataset cùng lúc từ `input/`, thư mục `output/` còn
 - Nếu ảnh bị xáo trộn thứ tự, pipeline hiện tại không tự sắp xếp lại.
 
 ## Một vài quyết định kỹ thuật
-- Dùng `ORB` để bám sát yêu cầu bài tập và giữ chi phí tính toán thấp.
+- Dùng `ORB` làm mặc định để giữ chi phí tính toán thấp; `SIFT` được tích hợp như backend thay thế khi cần độ ổn định matching cao hơn.
 - Không match trực tiếp ảnh mới với panorama đã ghép. Thay vào đó, hệ thống match các cặp ảnh gốc kề nhau rồi mới tích lũy transform.
 - Có fallback từ `Homography` sang `AffinePartial2D` khi `Homography` cho hình học không hợp lý.
 - Feather blending được xây trên `distance transform` để hạn chế viền đen bị kéo vào vùng chồng lấn.
@@ -143,4 +155,4 @@ Nếu chạy nhiều dataset cùng lúc từ `input/`, thư mục `output/` còn
 - Chưa tự suy luận thứ tự ảnh.
 - Chưa có bundle adjustment.
 - Chưa có seam finding tối ưu hoặc exposure compensation.
-- Chưa có detector thứ hai để so sánh như `SIFT` hoặc `SURF`.
+- Chưa tích hợp cylindrical projection hoặc bundle refinement riêng cho SIFT.

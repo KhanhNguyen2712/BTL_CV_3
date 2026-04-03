@@ -10,7 +10,7 @@ from .utils import ensure_dir, load_config, save_json
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Panorama stitching pipeline using ORB features.")
+    parser = argparse.ArgumentParser(description="Panorama stitching pipeline using ORB or SIFT features.")
     parser.add_argument("--input_dir", default="input", help="Directory containing input images.")
     parser.add_argument("--output_dir", default="output", help="Directory used to save outputs.")
     parser.add_argument("--feature", default=None, help="Override feature extractor from config.")
@@ -44,11 +44,30 @@ def _config_for_sequence(config: dict, sequence_name: str) -> dict:
     return merged_config
 
 
+def _apply_feature_runtime_defaults(config: dict) -> dict:
+    feature_name = str(config.get("feature", {}).get("name", "orb")).lower()
+    if feature_name != "sift":
+        return config
+
+    sift_defaults = {
+        "matching": {
+            "matcher": "flann",
+            "norm": "l2",
+            "ratio": 0.75,
+            "max_good_matches": 200,
+            "flann_trees": 5,
+            "flann_checks": 50,
+        }
+    }
+    return _deep_update(config, sift_defaults)
+
+
 def main() -> None:
     args = build_parser().parse_args()
     config = load_config(args.config)
     if args.feature:
         config["feature"]["name"] = args.feature
+    config = _apply_feature_runtime_defaults(config)
 
     base_output_dir = ensure_dir(args.output_dir)
     input_sequences = discover_input_sequences(args.input_dir)

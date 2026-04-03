@@ -18,6 +18,13 @@ feature:
     scoreType: HARRIS_SCORE # Score type for ranking features. Can be HARRIS_SCORE or FAST_SCORE.
     patchSize: 31 # Size of the patch used by the oriented BRIEF descriptor. Must be a positive odd integer.
     fastThreshold: 20 # Threshold for the FAST corner detector used in ORB. Higher values will result in fewer features being detected, while lower values will result in more features being detected. Adjust this value based on the characteristics of your images and the desired number of features.
+  sift:
+    nfeatures: 500 # Number of SIFT keypoints to retain after ranking by contrast.
+    nOctaveLayers: 3 # Number of layers in each octave of the Gaussian pyramid.
+    contrastThreshold: 0.04 # Threshold used to filter out low-contrast extrema.
+    edgeThreshold: 10 # Threshold used to reject unstable edge-like keypoints.
+    sigma: 1.6 # Base Gaussian smoothing applied before scale-space extrema detection.
+    detection_width: 600 # Detect SIFT features on a resized copy, then map keypoints back to the original image.
 
 matching:
   matcher: bf # Brute-force matcher.
@@ -25,8 +32,11 @@ matching:
   knn_k: 2 # Number of nearest neighbors to consider for each feature.
   ratio: 0.7 # Ratio test for filtering matches.
   min_good_matches: 30 # Minimum number of good matches required.
+  max_good_matches: null # Optional cap on retained good matches after sorting by descriptor distance. Useful for float descriptors such as SIFT.
   symmetry_check: true # Perform symmetry check for feature matching.
   fallback_cross_check: true # Perform cross-check for fallback matching.
+  flann_trees: 5 # Number of KD-trees used by the FLANN matcher when float descriptors are enabled.
+  flann_checks: 50 # Number of leaf checks used by FLANN during approximate nearest-neighbor search.
   pairwise_grid_rows: 2 # Number of rows in the pairwise matching grid.
   pairwise_grid_cols: 3 # Number of columns in the pairwise matching grid.
   pairwise_min_occupied_cells: 3 # Minimum number of occupied cells in the pairwise matching grid.
